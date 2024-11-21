@@ -9,7 +9,8 @@ function App() {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [invoiceUrl, setInvoiceUrl] = useState("");
-
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   const handleReservationLookup = async (event) => {
     event.preventDefault();
@@ -45,8 +46,6 @@ function App() {
         throw new Error("No reservation data found.");
       }
 
-      console.log('reservation::', reservation)
-
       const totalAmountAfterTax = parseFloat(reservation.TotalAmountAfterTax) || 0;
       const totalPayment = parseFloat(reservation.TotalPayment) || 0;
       const extraCharges = reservation.ExtraCharge?.reduce(
@@ -57,12 +56,12 @@ function App() {
       const totalAmount = totalAmountAfterTax + extraCharges;
       const balance = totalAmount - totalPayment;
 
-      const firstName = data.Reservations?.Reservation?.[0]?.FirstName || '';
-      const lastName = data.Reservations?.Reservation?.[0]?.LastName || '';
+      const fetchedFirstName = data.Reservations?.Reservation?.[0]?.FirstName || "";
+      const fetchedLastName = data.Reservations?.Reservation?.[0]?.LastName || "";
 
       setReservationData({
-        firstName,
-        lastName,
+        firstName: fetchedFirstName,
+        lastName: fetchedLastName,
         subtotal: totalAmountAfterTax,
         extraCharges,
         totalAmount,
@@ -72,12 +71,10 @@ function App() {
         ratePlanName: reservation.RateplanName,
       });
 
-      if (balance) {
+      setFirstName(fetchedFirstName);
+      setLastName(fetchedLastName);
       setAmount(balance.toFixed(2));
-      } else {
-        setAmount(totalAmount.toFixed(2));
-      }
-      setDescription(`${firstName} ${lastName} booking no: ${bookingId}`)
+      setDescription(`${fetchedFirstName} ${fetchedLastName} booking no: ${bookingId}`);
     } catch (err) {
       setError(err.message);
     }
@@ -85,10 +82,16 @@ function App() {
 
   const handlePaymentLinkRequest = async () => {
     try {
-      if (parseFloat(amount) === 0) {
-        alert('Amount cannot be 0. Please enter amount higher than 0');
+      if (!firstName || !lastName || !description) {
+        alert("Please fill up first name, last name and description.");
         return;
       }
+
+      if (!amount || parseFloat(amount) === 0) {
+        alert("Amount cannot be 0. Please enter an amount higher than 0.");
+        return;
+      }
+    
       const response = await fetch(
         "https://levo-payment-link-729510442010.us-central1.run.app/payment-link",
         {
@@ -97,20 +100,20 @@ function App() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            externalId: `levo-hotel-booking-id-${bookingId}`,
+            externalId: bookingId ? `levo-hotel-booking-id-${bookingId}` : `levo-hotel-booking-id-${Date.now()}`,
             amount,
             description,
             customer: {
-              given_names: `${reservationData.firstName} ${reservationData.lastName}`,
+              given_names: `${firstName} ${lastName}`,
             },
             items: [
               {
-                name: "Levo Hotel Room Accomodation",
-                "quantity": 1,
-                "price": amount,
-                "category": "Room Accomodation",
-                "url": "https://www.levohotel.com"
-              }
+                name: `${firstName} ${lastName} - Levo Hotel Room Accommodation`,
+                quantity: 1,
+                price: amount,
+                category: "Room Accommodation",
+                url: "https://www.levohotel.com",
+              },
             ],
             currency: "PHP",
           }),
@@ -124,7 +127,7 @@ function App() {
       const data = await response.json();
       setInvoiceUrl(data.invoice_url);
 
-        alert("Payment link created successfully!");
+      alert("Payment link created successfully!");
     } catch (err) {
       alert(`Error: ${err.message}`);
     }
@@ -166,80 +169,98 @@ function App() {
       )}
 
       {reservationData && (
-        <>
-          <div style={{ marginTop: "16px", background: '#dfdfdf', padding: '16px' }}>
-            <h2 style={{ margin: 0 }}>Reservation Details</h2>
-            <p>
-              <strong>First Name:</strong> {reservationData.firstName}
-            </p>
-            <p>
-              <strong>Last Name:</strong> {reservationData.lastName}
-            </p>
-            <hr />
-            <p>
-              <strong>Subtotal:</strong> {reservationData.subtotal.toFixed(2)}
-            </p>
-            <p>
-              <strong>Extra Charges:</strong> {reservationData.extraCharges.toFixed(2)}
-            </p>
-            <p>
-              <strong>Total Amount:</strong> {reservationData.totalAmount.toFixed(2)}
-            </p>
-            <hr />
-            <p>
-              <strong>Total Payment:</strong> {reservationData.totalPayment.toFixed(2)}
-            </p>
-            <p>
-              <strong>Balance:</strong> {reservationData.balance.toFixed(2)}
-            </p>
-          </div>
-
-          <div style={{ marginTop: "26px", marginBottom: "40px" }}>
-            <h2>Create Payment Link</h2>
-            <div>
-              <label>Amount:</label>
-              <input
-                type="input"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                style={{ width: "100%", padding: "8px", marginTop: "8px" }}
-              />
-            </div>
-            <div>
-              <label>Description:</label>
-              <input
-                type="text"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter description"
-                style={{ width: "100%", padding: "8px", marginTop: "8px" }}
-              />
-            </div>
-            <button
-              onClick={handlePaymentLinkRequest}
-              style={{
-                marginTop: "16px",
-                padding: "10px",
-                width: "100%",
-                backgroundColor: "#28a745",
-                color: "#fff",
-                border: "none",
-                borderRadius: "4px",
-              }}
-            >
-              Create Payment Link
-            </button>
-            {invoiceUrl && (
-              <div style={{ marginTop: "16px" }}>
-                <h2>Payment Link</h2>
-                <a href={invoiceUrl} target="_blank" rel="noopener noreferrer">
-                  {invoiceUrl}
-                </a>
-              </div>
-            )}
-          </div>
-        </>
+        <div style={{ marginTop: "16px", background: '#dfdfdf', padding: '16px' }}>
+          <h2 style={{ margin: 0 }}>Reservation Details</h2>
+          <p>
+            <strong>First Name:</strong> {reservationData.firstName}
+          </p>
+          <p>
+            <strong>Last Name:</strong> {reservationData.lastName}
+          </p>
+          <hr />
+          <p>
+            <strong>Subtotal:</strong> {reservationData.subtotal.toFixed(2)}
+          </p>
+          <p>
+            <strong>Extra Charges:</strong> {reservationData.extraCharges.toFixed(2)}
+          </p>
+          <p>
+            <strong>Total Amount:</strong> {reservationData.totalAmount.toFixed(2)}
+          </p>
+          <hr />
+          <p>
+            <strong>Total Payment:</strong> {reservationData.totalPayment.toFixed(2)}
+          </p>
+          <p>
+            <strong>Balance:</strong> {reservationData.balance.toFixed(2)}
+          </p>
+        </div>
       )}
+
+      <div style={{ marginTop: "26px", marginBottom: "40px" }}>
+        <h2>Create Payment Link</h2>
+        <div>
+          <label>First Name:</label>
+          <input
+            type="text"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            placeholder="Enter first name"
+            style={{ width: "100%", padding: "8px", marginTop: "8px", marginBottom: "8px" }}
+          />
+        </div>
+        <div>
+          <label>Last Name:</label>
+          <input
+            type="text"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            placeholder="Enter last name"
+            style={{ width: "100%", padding: "8px", marginTop: "8px", marginBottom: "8px" }}
+          />
+        </div>
+        <div>
+          <label>Amount:</label>
+          <input
+            type="input"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            style={{ width: "100%", padding: "8px", marginTop: "8px", marginBottom: "8px"}}
+          />
+        </div>
+        <div>
+          <label>Description:</label>
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Enter description"
+            style={{ width: "100%", padding: "8px", marginTop: "8px", marginBottom: "8px" }}
+          />
+        </div>
+        <button
+          onClick={handlePaymentLinkRequest}
+          style={{
+            marginTop: "16px",
+            padding: "10px",
+            width: "100%",
+            backgroundColor: "#28a745",
+            color: "#fff",
+            border: "none",
+            borderRadius: "4px",
+          }}
+        >
+          Create Payment Link
+        </button>
+        {invoiceUrl && (
+          <div style={{ marginTop: "16px" }}>
+            <h2>Payment Link</h2>
+            <a href={invoiceUrl} target="_blank" rel="noopener noreferrer">
+              {invoiceUrl}
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
