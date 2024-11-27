@@ -11,6 +11,7 @@ function App() {
   const [invoiceUrl, setInvoiceUrl] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleReservationLookup = async (event) => {
     event.preventDefault();
@@ -23,6 +24,7 @@ function App() {
     }
 
     try {
+      setIsLoading(true);
       const response = await fetch(
         "https://levo-payment-link-729510442010.us-central1.run.app/booking",
         {
@@ -38,6 +40,7 @@ function App() {
         throw new Error("Failed to fetch reservation data.");
       }
 
+      setIsLoading(false);
       const data = await response.json();
       const reservation =
         data.Reservations?.Reservation?.[0]?.BookingTran?.[0] || null;
@@ -74,7 +77,7 @@ function App() {
       setFirstName(fetchedFirstName);
       setLastName(fetchedLastName);
       setAmount(balance.toFixed(2));
-      setDescription(`${fetchedFirstName} ${fetchedLastName} booking no: ${bookingId}`);
+      setDescription(`${fetchedFirstName} ${fetchedLastName} Booking No: ${bookingId}`);
     } catch (err) {
       setError(err.message);
     }
@@ -92,6 +95,7 @@ function App() {
         return;
       }
     
+      setIsLoading(true)
       const response = await fetch(
         "https://levo-payment-link-729510442010.us-central1.run.app/payment-link",
         {
@@ -108,7 +112,7 @@ function App() {
             },
             items: [
               {
-                name: `${firstName} ${lastName} - Levo Hotel Room Accommodation`,
+                name: `Levo Hotel Room Accommodation`,
                 quantity: 1,
                 price: amount,
                 category: "Room Accommodation",
@@ -122,7 +126,10 @@ function App() {
 
       if (!response.ok) {
         throw new Error("Failed to create payment link.");
+        alert('Something went wrong. Try again later')
       }
+
+      setIsLoading(false);
 
       const data = await response.json();
       setInvoiceUrl(data.invoice_url);
@@ -135,7 +142,7 @@ function App() {
 
   return (
     <div style={{ maxWidth: "400px", margin: "0 auto", padding: "20px" }}>
-      <h1>Reservation Lookup</h1>
+      <h1>Levo Hotel Payment Link</h1>
       <form onSubmit={handleReservationLookup}>
         <div>
           <label htmlFor="bookingId">Reservation Number</label>
@@ -150,17 +157,18 @@ function App() {
         </div>
         <button
           type="submit"
+          disabled={isLoading}
           style={{
             marginTop: "16px",
             padding: "10px",
             width: "100%",
-            backgroundColor: "#007bff",
+            backgroundColor: isLoading ? "#636363" : "#007bff",
             color: "#fff",
             border: "none",
             borderRadius: "4px",
           }}
         >
-          Lookup Reservation
+          {isLoading? "..." : "Lookup Reservation"}
         </button>
       </form>
 
@@ -239,18 +247,19 @@ function App() {
           />
         </div>
         <button
+          disabled={isLoading}
           onClick={handlePaymentLinkRequest}
           style={{
             marginTop: "16px",
             padding: "10px",
             width: "100%",
-            backgroundColor: "#28a745",
+            backgroundColor: isLoading ? "#636363" : "#28a745",
             color: "#fff",
             border: "none",
             borderRadius: "4px",
           }}
         >
-          Create Payment Link
+          {isLoading ? '...' : 'Create Payment Link' }
         </button>
         {invoiceUrl && (
           <div style={{ marginTop: "16px" }}>
