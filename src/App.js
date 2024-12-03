@@ -125,7 +125,6 @@ function App() {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to create payment link.");
         alert('Something went wrong. Try again later')
       }
 
