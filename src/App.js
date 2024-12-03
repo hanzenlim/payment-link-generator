@@ -214,7 +214,7 @@ function App() {
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             placeholder="Enter first name"
-            style={{ width: "100%", padding: "8px", marginTop: "8px", marginBottom: "8px" }}
+            style={{ width: "95%", padding: "8px", marginTop: "8px", marginBottom: "8px" }}
           />
         </div>
         <div>
@@ -224,16 +224,16 @@ function App() {
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             placeholder="Enter last name"
-            style={{ width: "100%", padding: "8px", marginTop: "8px", marginBottom: "8px" }}
+            style={{ width: "95%", padding: "8px", marginTop: "8px", marginBottom: "8px" }}
           />
         </div>
         <div>
           <label>Amount:</label>
           <input
-            type="input"
+            type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            style={{ width: "100%", padding: "8px", marginTop: "8px", marginBottom: "8px"}}
+            style={{ width: "95%", padding: "8px", marginTop: "8px", marginBottom: "8px"}}
           />
         </div>
         <div>
@@ -243,7 +243,7 @@ function App() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Enter description"
-            style={{ width: "100%", padding: "8px", marginTop: "8px", marginBottom: "8px" }}
+            style={{ width: "95%", padding: "8px", marginTop: "8px", marginBottom: "8px" }}
           />
         </div>
         <button
