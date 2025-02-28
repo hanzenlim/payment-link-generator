@@ -104,7 +104,7 @@ function App() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            externalId: bookingId ? `levo-hotel-booking-id-${bookingId}` : `levo-hotel-booking-id-${Date.now()}`,
+            externalId: bookingId ? `levo-hotel-booking-id-${bookingId}` : `levo-hotel-${Date.now()}`,
             amount,
             description,
             customer: {
